@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Химическое Ядро: Терминал</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0b1e;
+        }
+        body {
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 243, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(188, 19, 254, 0.05) 0%, transparent 40%);
+            color: #e2e8f0;
+            font-family: 'Exo 2', sans-serif;
+        }
+        .header-font { font-family: 'Orbitron', sans-serif; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .neon-border {
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        .option-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .option-card:hover:not(.disabled) {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-blue);
+            transform: translateX(10px);
+        }
+
+        input[type="radio"]:checked + span {
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+
+        .hint-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .hint-content.open { max-height: 200px; }
+
+        .correct-ans { background: rgba(57, 255, 20, 0.15) !important; border-color: var(--neon-green) !important; color: var(--neon-green) !important; }
+        .wrong-ans { background: rgba(255, 20, 20, 0.15) !important; border-color: #ff1414 !important; color: #ff1414 !important; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--neon-blue); }
+            50% { box-shadow: 0 0 20px var(--neon-blue); }
+            100% { box-shadow: 0 0 5px var(--neon-blue); }
+        }
+        .btn-scan {
+            animation: pulse 2s infinite;
+        }
+        .animate-bounce-in {
+            animation: bounceIn 0.6s ease-out forwards;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen py-10 px-4 text-gray-200">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Заголовок системы -->
+        <header class="glass-panel neon-border rounded-2xl p-8 mb-10 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+            <h1 class="header-font text-3xl md:text-4xl font-bold tracking-widest text-cyan-400 mb-2 uppercase">Химическое Ядро v2.0</h1>
+            <p class="text-cyan-100 opacity-70 tracking-wider">Анализ энергетических и структурных изменений материи</p>
+            <div class="mt-4 flex justify-center gap-6 text-xs uppercase tracking-tighter opacity-50 font-mono">
+                <span>Узлов данных: 20</span>
+                <span>Вес узла: 0.5</span>
+                <span>Макс. коэффициент: 10.0</span>
+            </div>
+        </header>
+
+        <!-- Список узлов вопросов -->
+        <div id="quiz-container" class="space-y-6">
+            <!-- Вопросы генерируются скриптом -->
+        </div>
+
+        <!-- Кнопка запуска анализа -->
+        <div class="mt-12 flex flex-col items-center">
+            <button id="submit-btn" onclick="processAnalysis()" class="header-font btn-scan bg-transparent border-2 border-cyan-400 text-cyan-400 px-12 py-4 rounded-full hover:bg-cyan-400 hover:text-black transition-all duration-500 font-bold text-xl tracking-widest uppercase">
+                Запустить анализ данных
+            </button>
+
+            <!-- Результат (изначально скрыт) -->
+            <div id="result-terminal" class="hidden w-full mt-10 glass-panel border-2 border-cyan-400 rounded-2xl p-8 animate-bounce-in">
+                <div class="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="ml-4 text-xs opacity-50 uppercase font-mono">Финальный_отчет.log</span>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm opacity-60 uppercase mb-2 font-mono">Общий коэффициент знаний:</p>
+                    <div id="final-score" class="text-7xl font-bold header-font text-cyan-400 mb-4">0.0</div>
+                    <p id="final-msg" class="text-lg italic text-cyan-100 mb-6 font-light"></p>
+                    <button onclick="window.location.reload()" class="text-xs border border-white/20 px-8 py-3 rounded-full hover:bg-white/10 transition uppercase tracking-widest font-mono">Перезагрузить ядро</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            { q: "По какому признаку химические реакции делятся на соединения, разложения, замещения и обмена?", options: ["По изменению степеней окисления", "По числу и составу исходных и образующихся веществ", "По агрегатному состоянию", "По условиям давления"], correct: 1, hint: "см. страницу 110" },
+            { q: "Как называется реакция, в результате которой из одного сложного вещества образуется несколько новых?", options: ["Соединение", "Обмен", "Разложение", "Замещение"], correct: 2, hint: "см. страницу 110" },
+            { q: "В ходе окислительно-восстановительных реакций обязательно происходит...", options: ["Выпадение осадка", "Изменение степеней окисления атомов", "Поглощение света", "Разделение смеси газов"], correct: 1, hint: "см. страницу 111" },
+            { q: "Как называется равенство числа электронов, отданных восстановителем и принятых окислителем?", options: ["Химический баланс", "Электронный баланс", "Тепловой эффект", "Изомерия"], correct: 1, hint: "см. страницу 112" },
+            { q: "Экзотермические процессы характеризуются:", options: ["Поглощением энергии", "Выделением теплоты в среду", "Отсутствием изменений температуры", "Синтезом только газов"], correct: 1, hint: "см. страницу 112" },
+            { q: "Каким символом обозначают эндотермическую реакцию в уравнениях?", options: ["+ Q", "⇄", "- Q", "ΔH=0"], correct: 2, hint: "см. страницу 113" },
+            { q: "Необратимые реакции завершаются...", options: ["При установлении равновесия", "При полном расходе одного из реагентов", "Только в вакууме", "Через 10 секунд"], correct: 1, hint: "см. страницу 113" },
+            { q: "Знак '⇄' в уравнении указывает на:", options: ["Выделение газа", "Каталитический процесс", "Обратимость реакции", "Токсичность веществ"], correct: 2, hint: "см. страницу 113" },
+            { q: "Катализатор — это агент, который:", options: ["Замедляет реакцию", "Ускоряет реакцию, не расходуясь", "Меняет цвет раствора", "Является побочным продуктом"], correct: 1, hint: "см. страницу 114" },
+            { q: "Гомогенная система подразумевает протекание реакции:", options: ["На границе раздела фаз", "Во всем объеме однородной среды", "Только в вакууме", "При участии твердых тел"], correct: 2, hint: "см. страницу 115" },
+            { q: "Реакция меди с азотной кислотой является:", options: ["Гомогенной", "Гетерогенной", "Изомерной", "Нейтральной"], correct: 1, hint: "см. страницу 115" },
+            { q: "Изомеризация в органике — это процесс:", options: ["Распада молекулы", "Изменения строения при том же составе", "Горения в избытке кислорода", "Растворения в воде"], correct: 1, hint: "см. страницу 116" },
+            { q: "Тепловой эффект (Q) определяется как:", options: ["Скорость нагрева", "Энергия разрыва/образования связей", "Температура пламени", "Масса продуктов"], correct: 1, hint: "см. страницу 118" },
+            { q: "Разрыв химических связей — это всегда процесс:", options: ["Экзотермический", "Эндотермический", "Самопроизвольный", "Мгновенный"], correct: 1, hint: "см. страницу 118" },
+            { q: "Термохимическое уравнение обязательно содержит:", options: ["Имена ученых", "Значение Q (теплоты)", "Цвет осадка", "Объем пробирки"], correct: 1, hint: "см. страницу 119" },
+            { q: "Агрегатное состояние в ТХУ указывается потому что:", options: ["Это дань традиции", "Переход состояний требует/выделяет энергию", "Для расчета давления", "Чтобы знать вес"], correct: 1, hint: "см. страницу 119" },
+            { q: "Прибор для измерения теплоты реакции:", options: ["Спидометр", "Калориметр", "Динамометр", "Гигрометр"], correct: 1, hint: "см. страницу 120" },
+            { q: "Энергоценность 1 г углеводов составляет около:", options: ["17 кДж (4 ккал)", "38 кДж (9 ккал)", "0 кДж", "100 кДж"], correct: 0, hint: "см. страницу 122" },
+            { q: "Фотосинтез является примером:", options: ["Экзотермической реакции", "Эндотермической реакции", "Реакции замещения", "Окисления железа"], correct: 1, hint: "см. страницу 121" },
+            { q: "Суммарный Q реакции зависит от:", options: ["Размера колбы", "Природы реагентов и их состояния", "Скорости перемешивания", "Дня недели"], correct: 1, hint: "см. страницы 118-119" }
+        ];
+
+        const container = document.getElementById('quiz-container');
+
+        // Создание элементов вопросов
+        quizData.forEach((data, i) => {
+            const card = document.createElement('div');
+            card.className = 'glass-panel rounded-xl p-6 transition-all duration-500';
+            card.id = `q-node-${i}`;
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-xs font-mono text-cyan-500 uppercase tracking-widest">Узел_0${i+1}</span>
+                    <button onclick="showHint(${i})" class="text-[10px] border border-cyan-500/30 text-cyan-400 px-3 py-1 rounded-full hover:bg-cyan-500/20 transition uppercase font-mono">Данные_источника</button>
+                </div>
+                <h3 class="text-lg font-light mb-6 leading-relaxed">${data.q}</h3>
+                <div id="hint-${i}" class="hint-content mb-4 text-xs italic text-purple-400 border-l border-purple-500 pl-3 font-mono">
+                    ССЫЛКА_В_АРХИВЕ: ${data.hint}
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                    ${data.options.map((opt, oi) => `
+                        <label class="option-card p-4 rounded-lg cursor-pointer flex items-center gap-4 bg-white/5" id="label-${i}-${oi}">
+                            <input type="radio" name="node-${i}" value="${oi}" class="hidden">
+                            <div class="w-4 h-4 border border-cyan-500/50 rounded-full flex-shrink-0 flex items-center justify-center">
+                                <div class="dot w-2 h-2 bg-cyan-400 rounded-full scale-0 transition-transform"></div>
+                            </div>
+                            <span class="text-sm opacity-80">${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        // Обработка выбора
+        document.querySelectorAll('input[type="radio"]').forEach(input => {
+            input.addEventListener('change', function() {
+                const name = this.getAttribute('name');
+                const idx = name.split('-')[1];
+                document.querySelectorAll(`[id^="label-${idx}"]`).forEach(l => {
+                    l.style.borderColor = 'rgba(255,255,255,0.05)';
+                    l.querySelector('.dot').style.transform = 'scale(0)';
+                });
+                const label = this.closest('label');
+                label.style.borderColor = '#00f3ff';
+                label.querySelector('.dot').style.transform = 'scale(1)';
+            });
+        });
+
+        function showHint(i) {
+            document.getElementById(`hint-${i}`).classList.toggle('open');
+        }
+
+        function processAnalysis() {
+            let score = 0;
+            const btn = document.getElementById('submit-btn');
+            btn.innerHTML = "ВЫПОЛНЯЕТСЯ СКАНИРОВАНИЕ...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                quizData.forEach((item, i) => {
+                    const selected = document.querySelector(`input[name="node-${i}"]:checked`);
+                    const node = document.getElementById(`q-node-${i}`);
+                    
+                    if (selected) {
+                        const val = parseInt(selected.value);
+                        if (val === item.correct) {
+                            score += 0.5;
+                            document.getElementById(`label-${i}-${val}`).classList.add('correct-ans');
+                        } else {
+                            document.getElementById(`label-${i}-${val}`).classList.add('wrong-ans');
+                            document.getElementById(`label-${i}-${item.correct}`).classList.add('correct-ans');
+                        }
+                    } else {
+                        node.style.borderColor = '#ff1414';
+                        document.getElementById(`label-${i}-${item.correct}`).classList.add('correct-ans');
+                    }
+                });
+
+                btn.classList.add('hidden');
+                const resultTerminal = document.getElementById('result-terminal');
+                const scoreDisplay = document.getElementById('final-score');
+                const msgDisplay = document.getElementById('final-msg');
+
+                resultTerminal.classList.remove('hidden');
+                scoreDisplay.textContent = score.toFixed(1);
+
+                if (score >= 9) msgDisplay.textContent = "СИНХРОНИЗАЦИЯ 100%: ВЫ — МАСТЕР ХИМИЧЕСКИХ ЭЛЕМЕНТОВ.";
+                else if (score >= 6) msgDisplay.textContent = "СИНХРОНИЗАЦИЯ СТАБИЛЬНА: ХОРОШИЙ УРОВЕНЬ ПОДГОТОВКИ.";
+                else msgDisplay.textContent = "КРИТИЧЕСКАЯ ОШИБКА: ТРЕБУЕТСЯ ПОВТОРНОЕ ИЗУЧЕНИЕ БАЗЫ ДАННЫХ.";
+
+                resultTerminal.scrollIntoView({ behavior: 'smooth' });
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
